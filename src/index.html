@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cliptor</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="window-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo">⚡</span>
+        <h1 class="title">Cliptor</h1>
+      </div>
+      <button id="quit-btn" class="icon-btn" title="Quit Cliptor">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Search Input Area -->
+    <div class="search-container">
+      <div class="search-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search clipboard history..." autocomplete="off" autofocus>
+      </div>
+    </div>
+
+    <!-- History List -->
+    <main class="list-container">
+      <div id="history-list" class="history-list">
+        <!-- Dynamically injected items -->
+      </div>
+      
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-icon">📂</div>
+        <p class="empty-text">Your clipboard is empty</p>
+        <p class="empty-hint">Copy text from any app to start building history.</p>
+      </div>
+    </main>
+
+    <!-- Footer Actions -->
+    <footer class="app-footer">
+      <span id="items-count" class="footer-status">0 items</span>
+      <button id="clear-btn" class="text-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon btn-icon">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Clear History
+      </button>
+    </footer>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

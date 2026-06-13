@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cliptor Preview</title>
+  <link rel="stylesheet" href="preview.css">
+</head>
+<body>
+  <div class="preview-window">
+    <div class="preview-header">
+      <span class="preview-label">Preview</span>
+      <button id="close-btn" class="close-btn" title="Close preview">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="close-icon">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div id="preview-content" class="preview-content"></div>
+  </div>
+  <script>
+    function formatRelativeTime(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      if (diffSec < 5) return 'Just now';
+      if (diffSec < 60) return diffSec + 's ago';
+      if (diffMin < 60) return diffMin + 'm ago';
+      if (diffHour < 24) return diffHour + 'h ago';
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderPreview(item) {
+      const content = document.getElementById('preview-content');
+      if (!item) return;
+
+      if (item.isUrl) {
+        const hostname = escapeHtml(new URL(item.text.trim()).hostname);
+        const title = item.ogTitle ? escapeHtml(item.ogTitle) : hostname;
+        const ogImageHtml = item.ogImage
+          ? '<img class="preview-image" src="' + escapeHtml(item.ogImage) + '" alt="" onerror="this.style.display=\'none\'">'
+          : '';
+        const descHtml = item.ogDescription
+          ? '<div class="preview-description">' + escapeHtml(item.ogDescription) + '</div>'
+          : '';
+        const fullUrlHtml = '<div class="preview-url">' + escapeHtml(item.text.trim()) + '</div>';
+
+        content.innerHTML = ogImageHtml
+          + '<div class="preview-title">' + title + '</div>'
+          + '<div class="preview-hostname">' + hostname + '</div>'
+          + fullUrlHtml
+          + descHtml
+          + '<div class="preview-meta"><span class="item-type">LINK</span><span class="preview-time">' + formatRelativeTime(item.copiedAt) + '</span></div>';
+      } else {
+        content.innerHTML = '<div class="preview-text">' + escapeHtml(item.text) + '</div>'
+          + '<div class="preview-meta"><span class="preview-time">' + formatRelativeTime(item.copiedAt) + '</span></div>';
+      }
+    }
+
+    document.getElementById('close-btn').addEventListener('click', () => {
+      window.close();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        window.close();
+      }
+    });
+  </script>
+</body>
+</html>
