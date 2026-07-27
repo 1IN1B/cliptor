@@ -64,7 +64,7 @@ function renderList(items) {
           <div class="item-title">${title}</div>
           <div class="item-url">${hostname}</div>
           <div class="item-meta">
-            <span class="item-index">⌘${index + 1 <= 9 ? index + 1 : ' '}</span>
+            ${index < 9 ? `<span class="item-index">⌘${index + 1}</span>` : ''}
             <span class="item-type">LINK</span>
             <span class="item-time">${formatRelativeTime(item.copiedAt)}</span>
           </div>
@@ -81,7 +81,7 @@ function renderList(items) {
         <div class="item-main">
           <div class="item-content" title="${escapeHtml(item.text)}">${escapeHtml(item.text)}</div>
           <div class="item-meta">
-            <span class="item-index">⌘${index + 1 <= 9 ? index + 1 : ' '}</span>
+            ${index < 9 ? `<span class="item-index">⌘${index + 1}</span>` : ''}
             <span class="item-time">${formatRelativeTime(item.copiedAt)}</span>
           </div>
         </div>
