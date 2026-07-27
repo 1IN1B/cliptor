@@ -383,6 +383,12 @@ section {
   margin-bottom: 10px;
 }
 
+.step-desc {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 .code-block {
   background: #14141e;
   border: 1px solid rgba(255, 255, 255, 0.06);

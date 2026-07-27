@@ -5,7 +5,30 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "build": "electron-builder --mac --dir",
+    "dist": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.cliptor.app",
+    "productName": "Cliptor",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "assets/trayicon.svg",
+      "artifactName": "Cliptor-${version}-${arch}.${ext}"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "src/main.js"
+    }
   },
   "keywords": [
     "clipboard",
@@ -19,6 +42,7 @@
   "license": "MIT",
   "devDependencies": {
     "chokidar": "^3.6.0",
-    "electron": "^28.2.0"
+    "electron": "^28.2.0",
+    "electron-builder": "^25.1.8"
   }
 }
