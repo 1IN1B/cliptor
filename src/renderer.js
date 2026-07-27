@@ -51,7 +51,25 @@ function renderList(items) {
     itemEl.setAttribute('tabindex', '0');
     itemEl.setAttribute('data-id', item.id);
     
-    if (item.isUrl) {
+    if (item.type === 'image') {
+      itemEl.classList.add('image-item');
+      itemEl.innerHTML = `
+        <img class="item-image-thumb" src="${escapeHtml(item.imageData)}" alt="">
+        <div class="item-main">
+          <div class="item-meta">
+            ${index < 9 ? `<span class="item-index">⌘${index + 1}</span>` : ''}
+            <span class="item-type item-type-image">IMAGE</span>
+            <span class="item-time">${formatRelativeTime(item.copiedAt)}</span>
+          </div>
+        </div>
+        <button class="delete-btn" title="Delete entry" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      `;
+    } else if (item.isUrl) {
       const hostname = escapeHtml(new URL(item.text.trim()).hostname);
       const title = item.ogTitle ? escapeHtml(item.ogTitle) : hostname;
       const ogImageHtml = item.ogImage
@@ -97,7 +115,7 @@ function renderList(items) {
     // Copy item on click
     itemEl.addEventListener('click', (e) => {
       if (e.target.closest('.delete-btn')) return;
-      selectItem(item.text, itemEl);
+      selectItem(item, itemEl);
     });
     
     const deleteBtn = itemEl.querySelector('.delete-btn');
@@ -126,16 +144,12 @@ function renderList(items) {
 }
 
 // Select item to copy & paste
-function selectItem(text, itemEl) {
-  // Show quick copied feedback
-  const feedback = document.createElement('div');
-  feedback.className = 'copied-badge';
-  feedback.textContent = 'Copied!';
-  itemEl.appendChild(feedback);
-  
-  setTimeout(() => {
-    window.api.selectItem(text);
-  }, 100);
+function selectItem(item, itemEl) {
+  if (item.type === 'image') {
+    window.api.selectImage(item.imageData);
+  } else {
+    window.api.selectItem(item.text);
+  }
 }
 
 // Escape HTML utility
@@ -156,8 +170,8 @@ function filterHistory() {
     return;
   }
   
-  const filtered = clipboardHistory.filter(item => 
-    item.text.toLowerCase().includes(query)
+  const filtered = clipboardHistory.filter(item =>
+    item.type === 'image' ? false : item.text.toLowerCase().includes(query)
   );
   renderList(filtered);
 }
@@ -210,7 +224,7 @@ window.addEventListener('keydown', (e) => {
     const item = filteredHistory[focusedIndex];
     const itemEl = items[focusedIndex];
     if (item && itemEl) {
-      selectItem(item.text, itemEl);
+      selectItem(item, itemEl);
     }
     return;
   }
@@ -224,7 +238,7 @@ window.addEventListener('keydown', (e) => {
       const itemEl = items[targetIndex];
       if (item && itemEl) {
         e.preventDefault();
-        selectItem(item.text, itemEl);
+        selectItem(item, itemEl);
       }
     }
   }

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, ipcMain, clipboard, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, Tray, ipcMain, clipboard, nativeImage, screen, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
@@ -18,12 +18,18 @@ let previewWindow = null;
 let tray = null;
 let pollTimer = null;
 let lastText = '';
+let lastImageDataUrl = '';
 
 const historyFilePath = path.join(app.getPath('userData'), 'history.json');
 const MAX_HISTORY_ITEMS = 50;
 const POLL_INTERVAL = 800; // ms
 
-const iconPath = path.join(__dirname, '..', 'assets', 'trayIconTemplate.png');
+function loadTrayIcon() {
+  const pngPath = path.join(__dirname, '..', 'assets', 'trayIconTemplate.png');
+  const image = nativeImage.createFromPath(pngPath);
+  image.setTemplateImage(true);
+  return image;
+}
 
 function isUrl(text) {
   try {
@@ -129,15 +135,35 @@ function saveHistory(history) {
 
 function startClipboardPolling() {
   lastText = clipboard.readText();
+  lastImageDataUrl = '';
 
   pollTimer = setInterval(() => {
     const text = clipboard.readText();
-    if (!text || text.trim() === '') return;
-
-    if (text !== lastText) {
-      lastText = text;
-      addTextToHistory(text);
+    if (text && text.trim() !== '') {
+      if (text !== lastText) {
+        lastText = text;
+        addTextToHistory(text);
+      }
+      return;
     }
+
+    const formats = clipboard.availableFormats('clipboard');
+    const hasImage = formats.some(f =>
+      f.startsWith('image/') ||
+      f === 'public.png' ||
+      f === 'public.tiff' ||
+      f === 'public.jpeg'
+    );
+    if (!hasImage) return;
+
+    const image = clipboard.readImage('clipboard');
+    if (image.isEmpty()) return;
+
+    const dataUrl = image.toDataURL();
+    if (dataUrl === lastImageDataUrl) return;
+    lastImageDataUrl = dataUrl;
+
+    addImageToHistory(dataUrl);
   }, POLL_INTERVAL);
 }
 
@@ -180,6 +206,28 @@ function addTextToHistory(text) {
         mainWindow.webContents.send('history-updated', currentHistory);
       }
     });
+  }
+}
+
+function addImageToHistory(dataUrl) {
+  if (dataUrl.length > 3 * 1024 * 1024) return;
+
+  const history = loadHistory();
+  const exists = history.some(item => item.type === 'image' && item.imageData === dataUrl);
+  if (exists) return;
+
+  const newItem = {
+    id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+    type: 'image',
+    imageData: dataUrl,
+    copiedAt: new Date().toISOString()
+  };
+
+  const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+  saveHistory(newHistory);
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('history-updated', newHistory);
   }
 }
 
@@ -249,17 +297,46 @@ ipcMain.handle('get-history', () => {
   return loadHistory();
 });
 
+function showCopiedNotification(label) {
+  if (!Notification.isSupported()) return;
+  const notif = new Notification({ title: 'Cliptor', body: `${label} copied and pasted` });
+  notif.show();
+}
+
 ipcMain.on('select-item', (event, text) => {
-  // Update internal tracking first to prevent duplicates from polling
   lastText = text;
+  lastImageDataUrl = '';
   clipboard.writeText(text);
-  
-  // Hide window immediately so focus shifts back to the previous application
+
+  const snippet = text.length > 40 ? text.slice(0, 40) + '…' : text;
+  showCopiedNotification(snippet);
+
   if (mainWindow) {
     mainWindow.hide();
   }
-  
-  // Perform macOS Auto-Paste after a brief timeout (allows focus transition)
+
+  setTimeout(() => {
+    const appleScript = `tell application "System Events" to keystroke "v" using command down`;
+    exec(`osascript -e '${appleScript}'`, (err) => {
+      if (err) {
+        console.warn('Auto-paste keystroke failed:', err.message);
+      }
+    });
+  }, 80);
+});
+
+ipcMain.on('select-image', (event, imageDataUrl) => {
+  lastText = '';
+  lastImageDataUrl = imageDataUrl;
+  const image = nativeImage.createFromDataURL(imageDataUrl);
+  clipboard.writeImage(image);
+
+  showCopiedNotification('Image');
+
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+
   setTimeout(() => {
     const appleScript = `tell application "System Events" to keystroke "v" using command down`;
     exec(`osascript -e '${appleScript}'`, (err) => {
@@ -377,8 +454,7 @@ ipcMain.on('quit-app', () => {
 });
 
 app.whenReady().then(() => {
-  const image = nativeImage.createFromPath(iconPath);
-  image.setTemplateImage(true);
+  const image = loadTrayIcon();
   
   tray = new Tray(image);
   tray.setToolTip('Cliptor - Clipboard History');

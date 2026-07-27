@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   getHistory: () => ipcRenderer.invoke('get-history'),
   selectItem: (text) => ipcRenderer.send('select-item', text),
+  selectImage: (imageData) => ipcRenderer.send('select-image', imageData),
   deleteItem: (id) => ipcRenderer.send('delete-item', id),
   clearHistory: () => ipcRenderer.send('clear-history'),
   hideWindow: () => ipcRenderer.send('hide-window'),

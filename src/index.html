@@ -11,7 +11,20 @@
     <!-- Header -->
     <header class="app-header">
       <div class="brand">
-        <span class="logo">⚡</span>
+        <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ffb300"/>
+              <stop offset="100%" stop-color="#ff8000"/>
+            </linearGradient>
+          </defs>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1" stroke="url(#logo-gradient)"/>
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" stroke="url(#logo-gradient)"/>
+          <path d="M12 11h4" stroke="url(#logo-gradient)"/>
+          <path d="M12 16h4" stroke="url(#logo-gradient)"/>
+          <path d="M8 11h.01" stroke="url(#logo-gradient)"/>
+          <path d="M8 16h.01" stroke="url(#logo-gradient)"/>
+        </svg>
         <h1 class="title">Cliptor</h1>
       </div>
       <button id="quit-btn" class="icon-btn" title="Quit Cliptor">

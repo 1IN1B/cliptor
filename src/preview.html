@@ -47,7 +47,10 @@
       const content = document.getElementById('preview-content');
       if (!item) return;
 
-      if (item.isUrl) {
+      if (item.type === 'image') {
+        content.innerHTML = '<img class="preview-image preview-image-full" src="' + escapeHtml(item.imageData) + '" alt="">'
+          + '<div class="preview-meta"><span class="item-type item-type-image">IMAGE</span><span class="preview-time">' + formatRelativeTime(item.copiedAt) + '</span></div>';
+      } else if (item.isUrl) {
         const hostname = escapeHtml(new URL(item.text.trim()).hostname);
         const title = item.ogTitle ? escapeHtml(item.ogTitle) : hostname;
         const ogImageHtml = item.ogImage

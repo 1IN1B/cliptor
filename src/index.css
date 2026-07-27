@@ -158,11 +158,8 @@ body {
 }
 
 .logo {
-  font-size: 16px;
-  background: linear-gradient(135deg, #ffb300, #ff8000);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  width: 18px;
+  height: 18px;
   animation: pulse 2s infinite ease-in-out;
 }
 
@@ -529,21 +526,159 @@ body {
   height: 12px;
 }
 
-/* Copy feedback micro-interaction */
-.copied-badge {
-  position: absolute;
-  right: 12px;
-  background: #34c759;
-  color: white;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3), 0 0 20px rgba(52, 199, 89, 0.08);
-  animation: slideIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+/* Image items */
+.history-item.image-item {
+  padding: 8px 10px;
+  gap: 10px;
+  align-items: flex-start;
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+.item-image-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.item-type-image {
+  color: #ff9f0a !important;
+  background: rgba(255, 159, 10, 0.15) !important;
+}
+
+@media (prefers-color-scheme: light) {
+  .window-container {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.1);
+    border-top-color: rgba(0, 0, 0, 0.08);
+    border-bottom-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  .window-container::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08) 30%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0.08) 70%, transparent);
+  }
+
+  body {
+    color: #1d1d1f;
+  }
+
+  .title {
+    color: #1d1d1f;
+  }
+
+  .icon-btn,
+  .text-btn,
+  .footer-status {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .icon-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: #1d1d1f;
+  }
+
+  .icon-btn:active {
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  .search-icon {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  #search-input {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #1d1d1f;
+  }
+
+  #search-input::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+  }
+
+  #search-input:focus {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: var(--input-focus-border);
+    border-top-color: rgba(10, 132, 255, 0.6);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .history-item:hover, .history-item:focus-visible {
+    background: rgba(0, 0, 0, 0.04);
+    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.04);
+  }
+
+  .history-item:active {
+    background: rgba(0, 0, 0, 0.07);
+    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.03);
+  }
+
+  .item-content,
+  .item-title {
+    color: #1d1d1f;
+  }
+
+  .item-url,
+  .item-time {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .item-index {
+    background: rgba(10, 132, 255, 0.1);
+    box-shadow: none;
+  }
+
+  .empty-text {
+    color: #1d1d1f;
+  }
+
+  .empty-hint {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .delete-btn {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .delete-btn:hover {
+    background: rgba(255, 69, 58, 0.1);
+  }
+
+  .og-preview {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .og-placeholder {
+    background: rgba(10, 132, 255, 0.06);
+    border-color: rgba(10, 132, 255, 0.1);
+  }
+
+  .item-image-thumb {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .list-container::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .list-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .app-header {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.03) 0%, transparent 100%);
+  }
+
+  .app-footer {
+    border-top-color: rgba(0, 0, 0, 0.06);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.03) 0%, transparent 100%);
+  }
+
+  .text-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
 }

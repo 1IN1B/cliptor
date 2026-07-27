@@ -139,6 +139,16 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.preview-image-full {
+  max-height: none;
+  object-fit: contain;
+}
+
+.item-type-image {
+  color: #ff9f0a !important;
+  background: rgba(255, 159, 10, 0.15) !important;
+}
+
 .preview-title {
   font-size: 16px;
   font-weight: 500;
@@ -196,4 +206,63 @@ body {
 .preview-time {
   font-size: 11px;
   color: var(--text-secondary);
+}
+
+@media (prefers-color-scheme: light) {
+  .preview-window {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.15);
+    border-bottom-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  .preview-window::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08) 30%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0.08) 70%, transparent);
+  }
+
+  body {
+    color: #1d1d1f;
+  }
+
+  .preview-header {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.03) 0%, transparent 100%);
+  }
+
+  .close-btn {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .close-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: #1d1d1f;
+  }
+
+  .close-btn:active {
+    background: rgba(0, 0, 0, 0.07);
+  }
+
+  .preview-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .preview-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .preview-title,
+  .preview-text {
+    color: #1d1d1f;
+  }
+
+  .preview-url,
+  .preview-description,
+  .preview-label,
+  .preview-time {
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  .preview-image {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
 }
