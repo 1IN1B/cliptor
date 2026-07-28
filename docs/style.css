@@ -260,6 +260,23 @@ body {
   50% { transform: translateY(6px); }
 }
 
+.hero-image-wrapper {
+  perspective: 1000px;
+  margin-top: 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-image {
+  width: 320px;
+  max-width: 85vw;
+  border-radius: 14px;
+  transform-origin: bottom center;
+  transform: rotateX(75deg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  will-change: transform;
+}
+
 /* Demo */
 .demo {
   background: var(--bg-primary);
@@ -801,6 +818,14 @@ section {
     height: 56px;
   }
 
+  .hero-image {
+    width: 260px;
+  }
+
+  .hero-image-wrapper {
+    margin-top: 36px;
+  }
+
   section {
     padding: 60px 0;
   }
@@ -865,5 +890,9 @@ section {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+
+  .hero-image {
+    transform: rotateY(0deg) rotateX(0deg) !important;
   }
 }

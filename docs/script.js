@@ -29,4 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const heroImage = document.querySelector('.hero-image');
+  if (heroImage) {
+    const maxRotateX = 75;
+    const scrollRange = window.innerHeight * 0.8;
+
+    window.addEventListener('scroll', () => {
+      const progress = Math.min(window.scrollY / scrollRange, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const rotateX = maxRotateX * (1 - eased);
+      heroImage.style.transform = `rotateX(${rotateX}deg)`;
+    }, { passive: true });
+  }
+
 });
