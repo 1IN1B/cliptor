@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cliptor Note Editor</title>
+  <link rel="stylesheet" href="note-editor.css">
+</head>
+<body>
+  <div class="editor-window">
+    <div class="editor-header">
+      <span class="editor-label" id="editor-title">New Note</span>
+      <div class="editor-header-actions">
+        <button id="save-btn" class="save-btn" title="Save note">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save</span>
+        </button>
+        <button id="close-btn" class="close-btn" title="Close editor">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="close-icon">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="editor-toolbar">
+      <button class="format-btn" data-command="bold" title="Bold (Cmd+B)">
+        <strong>B</strong>
+      </button>
+      <button class="format-btn" data-command="underline" title="Underline (Cmd+U)">
+        <u>U</u>
+      </button>
+      <div class="format-divider"></div>
+      <button class="format-btn" data-command="insertUnorderedList" title="Bullet List">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="format-icon">
+          <line x1="9" y1="6" x2="20" y2="6"></line>
+          <line x1="9" y1="12" x2="20" y2="12"></line>
+          <line x1="9" y1="18" x2="20" y2="18"></line>
+          <circle cx="4" cy="6" r="1" fill="currentColor"></circle>
+          <circle cx="4" cy="12" r="1" fill="currentColor"></circle>
+          <circle cx="4" cy="18" r="1" fill="currentColor"></circle>
+        </svg>
+      </button>
+      <button class="format-btn" data-command="insertOrderedList" title="Numbered List">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="format-icon">
+          <line x1="10" y1="6" x2="21" y2="6"></line>
+          <line x1="10" y1="12" x2="21" y2="12"></line>
+          <line x1="10" y1="18" x2="21" y2="18"></line>
+          <text x="2" y="8" font-size="8" fill="currentColor" stroke="none" font-family="sans-serif">1</text>
+          <text x="2" y="14" font-size="8" fill="currentColor" stroke="none" font-family="sans-serif">2</text>
+          <text x="2" y="20" font-size="8" fill="currentColor" stroke="none" font-family="sans-serif">3</text>
+        </svg>
+      </button>
+    </div>
+    <div id="note-editor" class="note-editor" contenteditable="true" placeholder="Start typing your note..."></div>
+  </div>
+  <script>
+    let currentItemId = null;
+
+    function formatRelativeTime(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      if (diffSec < 5) return 'Just now';
+      if (diffSec < 60) return diffSec + 's ago';
+      if (diffMin < 60) return diffMin + 'm ago';
+      if (diffHour < 24) return diffHour + 'h ago';
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function initEditor(item) {
+      const editor = document.getElementById('note-editor');
+      const title = document.getElementById('editor-title');
+      if (item && item.content) {
+        editor.innerHTML = item.content;
+        currentItemId = item.id;
+        title.textContent = 'Edit Note';
+      } else {
+        editor.innerHTML = '';
+        currentItemId = null;
+        title.textContent = 'New Note';
+      }
+      editor.focus();
+    }
+
+    document.getElementById('save-btn').addEventListener('click', () => {
+      const editor = document.getElementById('note-editor');
+      const content = editor.innerHTML.trim();
+      if (content) {
+        window.api.saveNote(content, currentItemId);
+      }
+      window.close();
+    });
+
+    document.getElementById('close-btn').addEventListener('click', () => {
+      window.close();
+    });
+
+    document.querySelectorAll('.format-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.execCommand(btn.dataset.command, false, null);
+        document.getElementById('note-editor').focus();
+      });
+    });
+
+    document.getElementById('note-editor').addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        window.close();
+      }
+      if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        document.getElementById('save-btn').click();
+      }
+    });
+  </script>
+</body>
+</html>

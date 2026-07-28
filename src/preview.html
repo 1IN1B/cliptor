@@ -50,6 +50,22 @@
       if (item.type === 'image') {
         content.innerHTML = '<img class="preview-image preview-image-full" src="' + escapeHtml(item.imageData) + '" alt="">'
           + '<div class="preview-meta"><span class="item-type item-type-image">IMAGE</span><span class="preview-time">' + formatRelativeTime(item.copiedAt) + '</span></div>';
+      } else if (item.type === 'voice') {
+        const duration = item.duration || 0;
+        const mins = Math.floor(duration / 60);
+        const secs = Math.floor(duration % 60);
+        const audioSrc = item.audioDataUrl || item.audioFile;
+        content.innerHTML = '<div class="preview-voice">'
+          + '<div class="preview-voice-icon">'
+          + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>'
+          + '</div>'
+          + '<div class="preview-voice-duration">' + mins + ':' + secs.toString().padStart(2, '0') + '</div>'
+          + '<audio id="audio-player" controls src="' + escapeHtml(audioSrc) + '" class="preview-audio-player"></audio>'
+          + '</div>'
+          + '<div class="preview-meta"><span class="item-type item-type-voice">VOICE</span><span class="preview-time">' + formatRelativeTime(item.copiedAt) + '</span></div>';
+      } else if (item.type === 'note') {
+        content.innerHTML = '<div class="preview-note">' + (item.content || '') + '</div>'
+          + '<div class="preview-meta"><span class="item-type item-type-note">NOTE</span><span class="preview-time">' + formatRelativeTime(item.copiedAt) + '</span></div>';
       } else if (item.isUrl) {
         const hostname = escapeHtml(new URL(item.text.trim()).hostname);
         const title = item.ogTitle ? escapeHtml(item.ogTitle) : hostname;

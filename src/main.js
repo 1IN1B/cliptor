@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Tray, ipcMain, clipboard, nativeImage, screen, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 const https = require('https');
 const http = require('http');
 const zlib = require('zlib');
@@ -15,20 +15,108 @@ if (app.dock) {
 
 let mainWindow = null;
 let previewWindow = null;
+let noteEditorWindow = null;
 let tray = null;
 let pollTimer = null;
 let lastText = '';
 let lastImageDataUrl = '';
 
 const historyFilePath = path.join(app.getPath('userData'), 'history.json');
+const recordingsDir = path.join(app.getPath('userData'), 'recordings');
 const MAX_HISTORY_ITEMS = 50;
 const POLL_INTERVAL = 800; // ms
+const SCREENSHOT_DEBOUNCE_MS = 1500;
 
 function loadTrayIcon() {
   const pngPath = path.join(__dirname, '..', 'assets', 'trayIconTemplate.png');
   const image = nativeImage.createFromPath(pngPath);
   image.setTemplateImage(true);
   return image;
+}
+
+function getScreenshotDirs() {
+  const dirs = [];
+  try {
+    const result = execSync('defaults read com.apple.screencapture location', { encoding: 'utf8' }).trim();
+    if (result && fs.existsSync(result)) {
+      dirs.push(result);
+      return dirs;
+    }
+  } catch {}
+  const home = app.getPath('home');
+  const desktop = path.join(home, 'Desktop');
+  const downloads = path.join(home, 'Downloads');
+  if (fs.existsSync(desktop)) dirs.push(desktop);
+  if (fs.existsSync(downloads)) dirs.push(downloads);
+  return dirs;
+}
+
+function isScreenshotFile(filename) {
+  return /^Screenshot\s\d{4}-\d{2}-\d{2}\sat\s\d{1,2}\.\d{2}\.\d{2}(?:\s(?:AM|PM))?\.(png|jpg|jpeg)$/i.test(filename)
+    || /^Screen\sShot\s\d{4}-\d{2}-\d{2}\sat\s\d{1,2}\.\d{2}\.\d{2}(?:\s(?:AM|PM))?\.(png|jpg|jpeg)$/i.test(filename);
+}
+
+let screenshotWatcher = null;
+let recentScreenshots = new Map();
+
+function addScreenshotToHistory(filePath) {
+  const filename = path.basename(filePath);
+  if (recentScreenshots.has(filename)) return;
+
+  recentScreenshots.set(filename, true);
+  setTimeout(() => recentScreenshots.delete(filename), SCREENSHOT_DEBOUNCE_MS * 2);
+
+  try {
+    if (!fs.existsSync(filePath)) return;
+    const stats = fs.statSync(filePath);
+    if (stats.size > 5 * 1024 * 1024) return;
+
+    const image = nativeImage.createFromPath(filePath);
+    if (image.isEmpty()) return;
+
+    const dataUrl = image.toDataURL({ quality: 0.8 });
+    if (dataUrl.length > 3 * 1024 * 1024) return;
+
+    const history = loadHistory();
+    const exists = history.some(item => item.type === 'image' && item.imageData === dataUrl);
+    if (exists) return;
+
+    const newItem = {
+      id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+      type: 'image',
+      imageData: dataUrl,
+      copiedAt: new Date().toISOString()
+    };
+
+    const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+    saveHistory(newHistory);
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('history-updated', newHistory);
+    }
+    console.log('[Screenshot] Added:', filename);
+  } catch (err) {
+    console.error('[Screenshot] Failed:', err.message);
+  }
+}
+
+function startScreenshotWatcher() {
+  const chokidar = require('chokidar');
+  const screenshotDirs = getScreenshotDirs();
+
+  console.log('[Screenshot] Watching:', screenshotDirs.join(', '));
+
+  screenshotWatcher = chokidar.watch(
+    screenshotDirs.map(dir => path.join(dir, 'Screenshot*')),
+    { ignoreInitial: true, persistent: true, depth: 0 }
+  );
+
+  screenshotWatcher.on('add', (filePath) => {
+    const filename = path.basename(filePath);
+    if (isScreenshotFile(filename)) {
+      addScreenshotToHistory(filePath);
+    }
+  });
 }
 
 function isUrl(text) {
@@ -231,16 +319,83 @@ function addImageToHistory(dataUrl) {
   }
 }
 
+function ensureRecordingsDir() {
+  if (!fs.existsSync(recordingsDir)) {
+    fs.mkdirSync(recordingsDir, { recursive: true });
+  }
+}
+
+function addVoiceNoteToHistory(audioBase64, duration) {
+  ensureRecordingsDir();
+  const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
+  const filename = `voice-${id}.webm`;
+  const filePath = path.join(recordingsDir, filename);
+
+  const audioBuffer = Buffer.from(audioBase64, 'base64');
+  fs.writeFileSync(filePath, audioBuffer);
+
+  const history = loadHistory();
+  const newItem = {
+    id: id,
+    type: 'voice',
+    audioFile: filename,
+    duration: duration,
+    copiedAt: new Date().toISOString()
+  };
+
+  const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+  saveHistory(newHistory);
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('history-updated', newHistory);
+  }
+}
+
+function addNoteToHistory(content, itemId) {
+  const history = loadHistory();
+
+  if (itemId) {
+    const existingItem = history.find(item => item.id === itemId);
+    if (existingItem) {
+      existingItem.content = content;
+      saveHistory(history);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('history-updated', history);
+      }
+      return;
+    }
+  }
+
+  const newItem = {
+    id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+    type: 'note',
+    content: content,
+    copiedAt: new Date().toISOString()
+  };
+
+  const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+  saveHistory(newHistory);
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('history-updated', newHistory);
+  }
+}
+
 function createMainWindow() {
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().bounds;
+
   mainWindow = new BrowserWindow({
-    width: 320,
-    height: 450,
+    width: screenWidth,
+    height: 400,
+    x: 0,
+    y: screenHeight - 400,
     show: false,
     frame: false,
     fullscreenable: false,
     resizable: false,
     transparent: true,
     vibrancy: 'under-window',
+    roundedCorners: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     webPreferences: {
@@ -278,18 +433,10 @@ function toggleWindow() {
 }
 
 function positionWindow() {
-  if (!mainWindow || !tray) return;
+  if (!mainWindow) return;
 
-  const trayBounds = tray.getBounds();
-  const windowBounds = mainWindow.getBounds();
-
-  // Horizontal centering under the tray icon
-  const x = Math.round(trayBounds.x + (trayBounds.width / 2) - (windowBounds.width / 2));
-  
-  // Vertical position just below the status bar
-  const y = Math.round(trayBounds.y + trayBounds.height + 4);
-
-  mainWindow.setPosition(x, y, false);
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().bounds;
+  mainWindow.setPosition(0, screenHeight - 400, false);
 }
 
 // IPC Handlers
@@ -349,6 +496,13 @@ ipcMain.on('select-image', (event, imageDataUrl) => {
 
 ipcMain.on('delete-item', (event, id) => {
   const history = loadHistory();
+  const itemToDelete = history.find(item => item.id === id);
+  if (itemToDelete && itemToDelete.type === 'voice' && itemToDelete.audioFile) {
+    const filePath = path.join(recordingsDir, itemToDelete.audioFile);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
   const filtered = history.filter(item => item.id !== id);
   saveHistory(filtered);
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -357,6 +511,12 @@ ipcMain.on('delete-item', (event, id) => {
 });
 
 ipcMain.on('clear-history', () => {
+  if (fs.existsSync(recordingsDir)) {
+    const files = fs.readdirSync(recordingsDir);
+    files.forEach(file => {
+      fs.unlinkSync(path.join(recordingsDir, file));
+    });
+  }
   saveHistory([]);
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('history-updated', []);
@@ -367,6 +527,33 @@ ipcMain.on('hide-window', () => {
   if (mainWindow) {
     mainWindow.hide();
   }
+});
+
+ipcMain.on('save-voice-note', (event, audioBase64, duration) => {
+  addVoiceNoteToHistory(audioBase64, duration);
+});
+
+ipcMain.on('save-note', (event, content, itemId) => {
+  addNoteToHistory(content, itemId);
+});
+
+ipcMain.on('play-voice-note', (event, item) => {
+  if (!previewWindow) {
+    createPreviewWindow();
+  }
+
+  let itemToSend = { ...item };
+  if (item.audioFile) {
+    const filePath = path.join(recordingsDir, item.audioFile);
+    if (fs.existsSync(filePath)) {
+      const audioBuffer = fs.readFileSync(filePath);
+      itemToSend.audioDataUrl = `data:audio/webm;base64,${audioBuffer.toString('base64')}`;
+    }
+  }
+
+  previewWindow.webContents.executeJavaScript(`renderPreview(${JSON.stringify(itemToSend)})`);
+  previewWindow.show();
+  previewWindow.focus();
 });
 
 function createPreviewWindow() {
@@ -416,6 +603,62 @@ ipcMain.on('hide-preview', () => {
   }
 });
 
+function createNoteEditorWindow() {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+
+  noteEditorWindow = new BrowserWindow({
+    width: 460,
+    height: 500,
+    show: false,
+    frame: false,
+    fullscreenable: false,
+    resizable: false,
+    transparent: true,
+    vibrancy: 'under-window',
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    x: Math.round((width - 460) / 2),
+    y: Math.round((height - 500) / 2),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  noteEditorWindow.loadFile(path.join(__dirname, 'note-editor.html'));
+
+  noteEditorWindow.on('closed', () => {
+    noteEditorWindow = null;
+  });
+}
+
+ipcMain.on('open-note-editor', (event, item) => {
+  if (noteEditorWindow && !noteEditorWindow.isDestroyed()) {
+    noteEditorWindow.focus();
+    if (item) {
+      noteEditorWindow.webContents.executeJavaScript(`initEditor(${JSON.stringify(item)})`);
+    }
+    return;
+  }
+
+  createNoteEditorWindow();
+  noteEditorWindow.once('ready-to-show', () => {
+    noteEditorWindow.show();
+    noteEditorWindow.focus();
+    if (item) {
+      noteEditorWindow.webContents.executeJavaScript(`initEditor(${JSON.stringify(item)})`);
+    }
+  });
+});
+
+ipcMain.on('close-note-editor', () => {
+  if (noteEditorWindow && !noteEditorWindow.isDestroyed()) {
+    noteEditorWindow.hide();
+  }
+});
+
 function watchDev() {
   if (!isDev) return;
 
@@ -426,6 +669,8 @@ function watchDev() {
     path.join(srcDir, 'index.html'),
     path.join(srcDir, 'index.css'),
     path.join(srcDir, 'renderer.js'),
+    path.join(srcDir, 'note-editor.html'),
+    path.join(srcDir, 'note-editor.css'),
   ], { ignoreInitial: true });
 
   rendererWatcher.on('change', () => {
@@ -454,6 +699,7 @@ ipcMain.on('quit-app', () => {
 });
 
 app.whenReady().then(() => {
+  ensureRecordingsDir();
   const image = loadTrayIcon();
   
   tray = new Tray(image);
@@ -465,6 +711,7 @@ app.whenReady().then(() => {
   
   createMainWindow();
   startClipboardPolling();
+  startScreenshotWatcher();
   watchDev();
 });
 

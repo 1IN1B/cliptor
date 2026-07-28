@@ -1,0 +1,309 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');
+
+:root {
+  --text-primary: #f5f5f7;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --accent-color: #0A84FF;
+  --hover-bg: rgba(255, 255, 255, 0.06);
+  --active-bg: rgba(255, 255, 255, 0.1);
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-family);
+  background: transparent;
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  user-select: none;
+}
+
+.editor-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: rgba(18, 18, 24, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  animation: editorWindowIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes editorWindowIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.editor-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25) 30%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0.25) 70%, transparent);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Header */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 100%);
+}
+
+.editor-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.editor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent-color);
+  color: white;
+  font-family: var(--font-family);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.save-btn:hover {
+  background: #0976e6;
+}
+
+.save-btn:active {
+  transform: scale(0.96);
+}
+
+.save-btn .btn-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 69, 58, 0.15);
+  color: #FF453A;
+}
+
+.close-btn:active {
+  background: rgba(255, 69, 58, 0.25);
+  transform: scale(0.95);
+}
+
+.close-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Toolbar */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.format-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 14px;
+  transition: all 0.12s ease;
+}
+
+.format-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.format-btn:active {
+  background: var(--active-bg);
+  transform: scale(0.95);
+}
+
+.format-btn.active {
+  background: rgba(10, 132, 255, 0.15);
+  color: var(--accent-color);
+}
+
+.format-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.format-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0 4px;
+}
+
+/* Editor */
+.note-editor {
+  flex: 1;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  outline: none;
+  overflow-y: auto;
+  user-select: text;
+  cursor: text;
+}
+
+.note-editor:empty::before {
+  content: attr(placeholder);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.note-editor p {
+  margin: 0 0 10px 0;
+}
+
+.note-editor ul,
+.note-editor ol {
+  margin: 0 0 10px 0;
+  padding-left: 24px;
+}
+
+.note-editor li {
+  margin-bottom: 4px;
+}
+
+.note-editor strong {
+  font-weight: 600;
+}
+
+.note-editor u {
+  text-decoration: underline;
+}
+
+/* Custom Scrollbar */
+.note-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.note-editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.note-editor::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.note-editor::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+  .editor-window {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(0, 0, 0, 0.15);
+    border-bottom-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  .editor-window::before {
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.08) 30%, rgba(0, 0, 0, 0.12) 50%, rgba(0, 0, 0, 0.08) 70%, transparent);
+  }
+
+  body {
+    color: #1d1d1f;
+  }
+
+  .editor-header {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.03) 0%, transparent 100%);
+  }
+
+  .close-btn {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .close-btn:hover {
+    background: rgba(255, 69, 58, 0.1);
+    color: #FF453A;
+  }
+
+  .format-btn {
+    color: rgba(0, 0, 0, 0.45);
+  }
+
+  .format-btn:hover {
+    color: #1d1d1f;
+  }
+
+  .format-divider {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .note-editor {
+    color: #1d1d1f;
+  }
+
+  .note-editor::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .note-editor::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}

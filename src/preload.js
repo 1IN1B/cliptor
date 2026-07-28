@@ -10,6 +10,11 @@ contextBridge.exposeInMainWorld('api', {
   quitApp: () => ipcRenderer.send('quit-app'),
   showPreview: (item) => ipcRenderer.send('show-preview', item),
   hidePreview: () => ipcRenderer.send('hide-preview'),
+  saveVoiceNote: (audioBase64, duration) => ipcRenderer.send('save-voice-note', audioBase64, duration),
+  saveNote: (content, itemId) => ipcRenderer.send('save-note', content, itemId),
+  playVoiceNote: (item) => ipcRenderer.send('play-voice-note', item),
+  openNoteEditor: (item) => ipcRenderer.send('open-note-editor', item),
+  closeNoteEditor: () => ipcRenderer.send('close-note-editor'),
   onHistoryUpdated: (callback) => {
     const subscription = (event, history) => callback(history);
     ipcRenderer.on('history-updated', subscription);
