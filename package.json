@@ -1,6 +1,6 @@
 {
   "name": "cliptor",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "macOS Menu Bar Clipboard History Utility",
   "main": "src/main.js",
   "scripts": {
